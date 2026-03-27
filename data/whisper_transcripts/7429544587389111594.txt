@@ -1,0 +1,1 @@
+This new app called PolyMarket can help you predict the outcome of the election. How it works is that there's a bunch of different categories for the election that people can vote on and cast their predictions. It also shows real-time polls and comments from people that fluctuate with the news. Make sure you check it out at PolyMarket on the App Store.

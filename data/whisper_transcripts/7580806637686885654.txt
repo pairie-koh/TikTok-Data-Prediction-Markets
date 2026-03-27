@@ -1,0 +1,1 @@
+market is a crypto powered prediction market where people trade on real world events. Each yes or no price reflects what traders think will happen, turning crowd opinions into live probabilities you can actually trade. That's the premise, a simple idea built for a world that loves to

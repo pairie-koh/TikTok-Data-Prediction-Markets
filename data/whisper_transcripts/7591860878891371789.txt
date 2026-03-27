@@ -1,0 +1,1 @@
+This polymarket bot is printing $15,000 a day on average. The bot is trading strictly 15-minute Bitcoin up or down markets and has a 100% win rate. The bot finds positions that are effectively decided, but not settled, and bets large sums on the finality occurring.
