@@ -36,14 +36,19 @@ def load_data():
                 "partisan_direction": row.get("partisan_direction", ""),
                 "candidate_referenced": row.get("candidate_referenced", ""),
                 "sentiment": row.get("sentiment", ""),
+                "topic": "",
+                "platforms": "",
                 "coded": True,
             }
 
-    # Load from filtered CSV (adds videos not in coded set)
-    with open(DATA_DIR / "tiktok_filtered.csv", encoding="utf-8") as f:
+    # Load from platform-filtered CSV (adds videos not in coded set)
+    with open(DATA_DIR / "tiktok_platform_filtered.csv", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             post_id = row["post_id"]
             if post_id in videos:
+                # Still update topic for coded videos
+                videos[post_id]["topic"] = row.get("_topic", "")
+                videos[post_id]["platforms"] = row.get("_platforms", "")
                 continue
             videos[post_id] = {
                 "post_id": post_id,
@@ -57,11 +62,13 @@ def load_data():
                 "play_count": row.get("play_count", ""),
                 "video_duration": row.get("video_duration", ""),
                 "hashtags": row.get("hashtags", ""),
-                "prediction_market": "",
+                "prediction_market": row.get("_platforms", ""),
                 "framing": "",
                 "partisan_direction": "",
                 "candidate_referenced": "",
                 "sentiment": "",
+                "topic": row.get("_topic", ""),
+                "platforms": row.get("_platforms", ""),
                 "coded": False,
             }
 
@@ -130,6 +137,7 @@ def api_videos():
     coded_only = request.args.get("coded", "") == "true"
     has_transcript = request.args.get("has_transcript", "") == "true"
     market = request.args.get("market", "")
+    topic = request.args.get("topic", "")
 
     results = VIDEO_LIST
     if coded_only:
@@ -138,6 +146,8 @@ def api_videos():
         results = [v for v in results if v["transcript"]]
     if market:
         results = [v for v in results if market.lower() in v.get("prediction_market", "").lower()]
+    if topic:
+        results = [v for v in results if v.get("topic", "").upper() == topic.upper()]
     if search:
         results = [
             v for v in results
@@ -172,6 +182,7 @@ def api_videos():
                 "coded": v["coded"],
                 "prediction_market": v["prediction_market"],
                 "framing": v["framing"],
+                "topic": v.get("topic", ""),
             }
             for v in page_results
         ],
