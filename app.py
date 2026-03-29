@@ -41,9 +41,11 @@ def load_data():
                 "coded": True,
             }
 
-    # Load from platform-filtered CSV (adds videos not in coded set)
+    # Load from platform-filtered CSV (only political videos, topic=YES)
     with open(DATA_DIR / "tiktok_platform_filtered.csv", encoding="utf-8") as f:
         for row in csv.DictReader(f):
+            if row.get("_topic", "").upper() != "YES":
+                continue
             post_id = row["post_id"]
             if post_id in videos:
                 # Still update topic for coded videos
