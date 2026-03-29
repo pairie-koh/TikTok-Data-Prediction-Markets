@@ -53,22 +53,25 @@ PLATFORM_PATTERNS = [
 PLATFORM_RE = re.compile("|".join(PLATFORM_PATTERNS), re.IGNORECASE)
 
 # --- LLM prompt for pass 2 ---
-POLITICS_PROMPT = """A TikTok video mentions a prediction market platform ({platforms}). Does this video have anything to do with politics, elections, candidates, government, or policy?
+POLITICS_PROMPT = """A TikTok video mentions a prediction market platform ({platforms}). Does this video discuss US politics specifically?
 
-YES — The video is related to politics in any way. This includes:
-- Discussing election odds, candidate chances, political predictions
-- Using prediction market odds to make a political argument
-- Betting on political outcomes (even if framed as trading advice)
-- Discussing regulation of prediction markets by government
-- Commentary on political events that references prediction market odds
-- Teaching people how to bet on elections specifically
+YES — The video is about US politics. This includes:
+- US election odds, US candidate chances (Trump, Harris, Biden, Vance, DeSantis, etc.)
+- US Senate, House, Governor, or Presidential race predictions
+- Betting on US political outcomes (even if framed as trading advice)
+- US government policy predictions (tariffs, Fed rate cuts, US regulation)
+- Commentary on US political events using prediction market odds
+- Discussion of prediction market regulation by US government (CFTC, Congress)
 
-NO — The video has nothing to do with politics. This includes:
-- Sports betting (football, boxing, basketball, UFC, etc.)
-- Weather, entertainment, or non-political event predictions
-- General platform tutorials with no political content
-- Crypto/finance content unrelated to political outcomes
-- Sponsored content or ads with no political substance
+NO — The video is NOT about US politics. This includes:
+- Sports betting (football, soccer, boxing, basketball, UFC, La Liga, UCL, etc.)
+- Foreign wars, geopolitical conflicts, or non-US events (even if political)
+- Non-US elections or foreign government predictions
+- Weather, entertainment, celebrity, or non-political predictions
+- General platform tutorials, trading advice, or "how to make money" content
+- Crypto/finance content unrelated to US political outcomes
+- Sponsored content, ads, or promo codes with no US political substance
+- Prediction markets as a business/phenomenon without US political context
 
 Respond with exactly one word: YES or NO
 
