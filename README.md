@@ -6,12 +6,13 @@ TikTok videos discussing prediction markets (Polymarket, Kalshi, PredictIt) in t
 
 | Metric | Value |
 |---|---|
-| Raw scraped videos | ~2,800+ |
-| After platform keyword filter | 906 |
+| Raw scraped videos | 5,303 |
+| After platform keyword filter | 906 (from initial 3,435; refilter pending on new data) |
 | After US politics classifier | 413 |
-| After relevance filter (final) | **364** |
-| Date range | Nov 2020 - Mar 2026 |
+| After relevance filter (final) | **364** (refilter pending on new data) |
+| Date range | Nov 2020 - Apr 2026 |
 | Total views (364 videos) | ~27M |
+| Search keywords used | 71 (see [KEYWORDS.md](KEYWORDS.md)) |
 
 ### Platform Breakdown (364 relevant videos)
 

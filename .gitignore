@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Data (too large for git)
+data/raw/
+data/tiktok_transcripts/
+data/whisper_transcripts/
+data/tiktok_videos/
+data/tiktok_subs_tmp/
+data/tiktok_keyframes/
+
+# TikTok data
+tiktok/data/raw/
+tiktok/data/tiktok_transcripts/
+tiktok/data/whisper_transcripts/
+
+# YouTube data
+youtube/data/raw/
+youtube/data/youtube_platform_filtered.csv
+youtube/data/youtube_filter_llm_progress.json
+
+# OS junk
+nul
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

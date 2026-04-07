@@ -1,1 +1,0 @@
-I'm building a Bloomberg Terminal for Prediction Markets. Currently, I can get all live market data as well as pricing data from Calshi. My goal is to make an AI trading bot that you can chat with and make trades on your behalf. I'm also going to build a research feature where you can see updated news for each market. Follow to stay updated and see what I build.

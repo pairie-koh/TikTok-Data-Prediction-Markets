@@ -1,6 +1,7 @@
 """Simple Flask app to browse TikTok prediction market transcripts."""
 
 import csv
+import json
 import os
 from pathlib import Path
 
@@ -9,10 +10,22 @@ from flask import Flask, jsonify, request
 app = Flask(__name__, static_folder="static")
 
 DATA_DIR = Path(__file__).parent / "data"
+INFO_TRADING_FILE = DATA_DIR / "info_vs_trading_progress.json"
+RELEVANCE_FILE = DATA_DIR / "relevance_progress.json"
+
+
+def load_json_file(path):
+    """Load a JSON file if it exists."""
+    if path.exists():
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
 
 def load_data():
     """Load video metadata and transcripts from the platform-filtered dataset."""
+    classifications = load_json_file(INFO_TRADING_FILE)
+    relevance = load_json_file(RELEVANCE_FILE)
     videos = {}
 
     # Load only US-politics videos (topic=YES) from platform-filtered CSV
@@ -36,6 +49,8 @@ def load_data():
                 "prediction_market": row.get("_platforms", ""),
                 "platforms": row.get("_platforms", ""),
                 "match_source": row.get("_match_source", ""),
+                "content_type": classifications.get(post_id, ""),
+                "relevance": relevance.get(post_id, ""),
             }
 
     # Attach transcripts — prefer whisper, fall back to tiktok captions,
@@ -91,12 +106,17 @@ def api_videos():
     search = request.args.get("q", "").lower()
     has_transcript = request.args.get("has_transcript", "") == "true"
     market = request.args.get("market", "")
+    content_type = request.args.get("content_type", "").upper()
+    relevance = request.args.get("relevance", "").upper()
 
-    results = VIDEO_LIST
+    # Only show relevant videos by default
+    results = [v for v in VIDEO_LIST if v.get("relevance", "").upper() == "RELEVANT"]
     if has_transcript:
         results = [v for v in results if v["transcript"]]
     if market:
         results = [v for v in results if market.lower() in v.get("prediction_market", "").lower()]
+    if content_type:
+        results = [v for v in results if v.get("content_type", "").upper() == content_type]
     if search:
         results = [
             v for v in results
@@ -128,6 +148,8 @@ def api_videos():
                 "has_transcript": bool(v["transcript"]),
                 "transcript_source": v["transcript_source"],
                 "prediction_market": v["prediction_market"],
+                "content_type": v.get("content_type", ""),
+                "relevance": v.get("relevance", ""),
             }
             for v in page_results
         ],

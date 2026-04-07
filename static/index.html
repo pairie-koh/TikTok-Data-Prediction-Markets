@@ -154,6 +154,9 @@
   .tag.transcript { color: var(--green); border: 1px solid rgba(76,175,80,0.3); }
   .tag.coded { color: var(--blue); border: 1px solid rgba(91,155,213,0.3); }
   .tag.market { color: var(--accent); border: 1px solid rgba(254,44,85,0.3); }
+  .tag.info { color: #69b7ff; border: 1px solid rgba(105,183,255,0.3); }
+  .tag.trading { color: #ffa726; border: 1px solid rgba(255,167,38,0.3); }
+  .tag.not-relevant { color: #ef5350; border: 1px solid rgba(239,83,80,0.3); }
 
   .card-stats {
     display: flex;
@@ -302,8 +305,8 @@
   <h1><span>TikTok</span> Prediction Market Transcripts</h1>
   <div class="controls">
     <input class="search-box" type="text" placeholder="Search transcripts, descriptions, usernames..." id="search">
-    <button class="filter-btn" data-filter="has_transcript" id="btn-transcript">Has Transcript</button>
-    <button class="filter-btn" data-filter="coded" id="btn-coded">Coded</button>
+    <button class="filter-btn" data-filter="information" id="btn-information">Information</button>
+    <button class="filter-btn" data-filter="trading" id="btn-trading">Trading</button>
     <span class="stats" id="stats"></span>
   </div>
 </header>
@@ -325,7 +328,7 @@
   let totalResults = 0;
   let selectedId = null;
   let searchTimeout = null;
-  const filters = { has_transcript: false, coded: false };
+  const filters = { information: false, trading: false };
 
   const searchEl = document.getElementById('search');
   const listEl = document.getElementById('video-list');
@@ -339,8 +342,8 @@
     params.set('per_page', 50);
     const q = searchEl.value.trim();
     if (q) params.set('q', q);
-    if (filters.has_transcript) params.set('has_transcript', 'true');
-    if (filters.coded) params.set('coded', 'true');
+    if (filters.information) params.set('content_type', 'INFORMATION');
+    if (filters.trading) params.set('content_type', 'TRADING');
     return '/api/videos?' + params.toString();
   }
 
@@ -367,6 +370,8 @@
       if (v.has_transcript) tags += `<span class="tag transcript">${v.transcript_source}</span>`;
       if (v.coded) tags += '<span class="tag coded">coded</span>';
       if (v.prediction_market) tags += `<span class="tag market">${v.prediction_market}</span>`;
+      if (v.content_type === 'INFORMATION') tags += '<span class="tag info">information</span>';
+      if (v.content_type === 'TRADING') tags += '<span class="tag trading">trading</span>';
       if (v.framing) tags += `<span class="tag">${v.framing}</span>`;
 
       card.innerHTML = `
@@ -487,6 +492,12 @@
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.filter;
+      // Make information/trading mutually exclusive
+      if (key === 'information' || key === 'trading') {
+        const other = key === 'information' ? 'trading' : 'information';
+        filters[other] = false;
+        document.getElementById('btn-' + other).classList.remove('active');
+      }
       filters[key] = !filters[key];
       btn.classList.toggle('active', filters[key]);
       loadVideos(false);
