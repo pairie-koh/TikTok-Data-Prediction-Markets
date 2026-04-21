@@ -11,7 +11,7 @@ Usage:
     python replication/rise_of_prediction_markets_in_political_social_media_content/rise_of_prediction_markets_in_political_social_media_content.py
 """
 
-import json
+import csv
 import sys
 from pathlib import Path
 
@@ -22,23 +22,25 @@ import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 
+csv.field_size_limit(10_000_000)
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent.parent
 OUTPUT_DIR = SCRIPT_DIR
 
-# PM datasets (processed)
+# PM datasets (filtered to political content)
 TIKTOK_PM_CSV = ROOT / "tiktok" / "data" / "tiktok_platform_filtered.csv"
 YOUTUBE_PM_CSV = ROOT / "youtube" / "data" / "youtube_platform_filtered.csv"
 
-# Poll datasets
-TIKTOK_POLLS_RAW = ROOT / "polls" / "data" / "raw" / "tiktok_polls_raw.json"
-YOUTUBE_POLLS_RAW = ROOT / "polls" / "data" / "raw" / "youtube_polls_raw.json"
+# Poll datasets (filtered to political content)
+TIKTOK_POLLS_CSV = ROOT / "polls" / "data" / "tiktok_polls_filtered.csv"
+YOUTUBE_POLLS_CSV = ROOT / "polls" / "data" / "youtube_polls_filtered.csv"
 
 
-def load_pm(csv_path, platform, date_col):
-    """Load processed PM data, filtered to US-politics videos."""
+def load_filtered_csv(csv_path, platform, date_col, source_label):
+    """Load filtered CSV, keeping only _topic=YES rows."""
     if not csv_path.exists():
-        print(f"  {platform} PM: NO DATA FOUND at {csv_path}")
+        print(f"  {platform} {source_label}: NO DATA FOUND at {csv_path}")
         return pd.DataFrame(columns=["date", "source"])
 
     df = pd.read_csv(csv_path)
@@ -46,39 +48,22 @@ def load_pm(csv_path, platform, date_col):
     if "_topic" in df.columns:
         df = df[df["_topic"] == "YES"]
     df = df.dropna(subset=["date"])
-    print(f"  {platform} PM: {len(df)} political videos")
-    return df[["date"]].assign(source="prediction_markets")
-
-
-def load_polls(json_path, platform, date_col):
-    """Load raw poll-referencing video data."""
-    if not json_path.exists():
-        print(f"  {platform} Polls: NO DATA")
-        return pd.DataFrame(columns=["date", "source"])
-
-    data = json.load(open(json_path, encoding="utf-8"))
-    df = pd.DataFrame(data)
-    if date_col not in df.columns:
-        return pd.DataFrame(columns=["date", "source"])
-
-    df["date"] = pd.to_datetime(df[date_col], utc=True, errors="coerce").dt.tz_localize(None)
-    df = df.dropna(subset=["date"])
-    print(f"  {platform} Polls: {len(df)} videos")
-    return df[["date"]].assign(source="polls")
+    print(f"  {platform} {source_label}: {len(df)} political videos")
+    return df[["date"]].assign(source=source_label)
 
 
 def main():
     print("Loading datasets...")
 
-    # Load all data (TikTok + YouTube combined)
+    # Load all data (TikTok + YouTube combined), all filtered to _topic=YES
     dfs = []
-    for loader, path, plat, col in [
-        (load_pm, TIKTOK_PM_CSV, "TikTok", "create_time"),
-        (load_pm, YOUTUBE_PM_CSV, "YouTube", "date_posted"),
-        (load_polls, TIKTOK_POLLS_RAW, "TikTok", "create_time"),
-        (load_polls, YOUTUBE_POLLS_RAW, "YouTube", "date_posted"),
+    for path, plat, col, source in [
+        (TIKTOK_PM_CSV, "TikTok", "create_time", "prediction_markets"),
+        (YOUTUBE_PM_CSV, "YouTube", "date_posted", "prediction_markets"),
+        (TIKTOK_POLLS_CSV, "TikTok", "create_time", "polls"),
+        (YOUTUBE_POLLS_CSV, "YouTube", "date_posted", "polls"),
     ]:
-        d = loader(path, plat, col)
+        d = load_filtered_csv(path, plat, col, source)
         if len(d) > 0:
             dfs.append(d)
 
