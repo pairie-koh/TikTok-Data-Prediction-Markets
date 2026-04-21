@@ -1,95 +1,97 @@
-# TikTok-Data-Prediction-Markets
+# Prediction Markets in Political Social Media
 
-TikTok videos discussing prediction markets (Polymarket, Kalshi, PredictIt) in the context of US politics. Built for academic research on how prediction market odds enter political discourse on social media.
+How prediction market odds enter political discourse on TikTok and YouTube. This dataset tracks videos that reference prediction market platforms (Polymarket, Kalshi, PredictIt) and polling sources (538, RealClearPolitics, etc.) in the context of US politics.
 
-## Dataset Summary
+## Dataset
 
-| Metric | Value |
-|---|---|
-| Raw scraped videos | 5,303 |
-| After platform keyword filter | 906 (from initial 3,435; refilter pending on new data) |
-| After US politics classifier | 413 |
-| After relevance filter (final) | **364** (refilter pending on new data) |
-| Date range | Nov 2020 - Apr 2026 |
-| Total views (364 videos) | ~27M |
-| Search keywords used | 71 (see [KEYWORDS.md](KEYWORDS.md)) |
+| | TikTok | YouTube | Total |
+|---|---|---|---|
+| Prediction market videos | 593 | 4,078 | **4,671** |
+| Polling-focused videos | 317 | 2,923 | **3,240** |
+| **Total** | **910** | **7,001** | **7,911** |
 
-### Platform Breakdown (364 relevant videos)
+All videos are filtered to US political content (`_topic=YES`). Date range: 2020–2026. Collection via Bright Data using 71 search keywords (see [KEYWORDS.md](KEYWORDS.md)).
 
-- Polymarket: ~70%
-- Kalshi: ~41%
-- PredictIt: 0.5%
-- Both Kalshi + Polymarket: ~12%
+### Key Findings
 
-### Content Classification (413 US politics videos)
-
-- **INFORMATION (68%):** Creator discusses politics and cites prediction market odds as evidence or context
-- **TRADING (32%):** Creator focuses on making money on prediction markets; the political event is incidental
+- **73% of TikTok** and **86% of YouTube** prediction market videos cite odds as political information, not trading advice
+- "Prediction market" is overtaking "the polls" as the dominant framing in political social media content
+- YouTube has significantly more down-ballot coverage (senate, house, governor) while TikTok is almost entirely presidential
+- Trump is mentioned in ~60% of videos; Polymarket is the dominant platform (~70% of mentions)
 
 ## Filtering Pipeline
 
-The raw scrape was filtered in three passes to arrive at the final 364-video dataset.
+Each video passes a two-stage filter before entering the dataset.
 
-### Filter 1: Platform Keyword Match (`scripts/filter_by_platform.py`, Pass 1)
+**Pass 1 — Platform keyword filter** (regex, no LLM): Searches each video's description, hashtags, and transcript for platform names (`polymarket`, `kalshi`, `predictit`, `prediction market`, `betting odds`, `election odds`) with spelling variants. Only videos that explicitly name a platform or polling source survive.
 
-Regex-based keyword filter (no LLM, free). Each video's description, hashtags, and transcript are searched for platform names: `polymarket`, `kalshi`, `predictit` (with spelling variants). Videos with no platform mention are dropped.
+**Pass 2 — US politics classifier** (Claude Sonnet via OpenRouter): Each surviving video's description and transcript are sent to Claude Sonnet, which returns YES or NO to the question: "Does this video discuss US politics specifically?" YES includes election odds, candidate predictions, policy predictions, and CFTC regulation. NO includes sports betting, foreign events, crypto tutorials, and platform promos.
 
-- **Input:** ~2,800+ raw videos
-- **Output:** 906 videos
+The polls pipeline uses the same two-pass approach with polling-specific keywords (538, RealClearPolitics, Nate Silver, Quinnipiac, Rasmussen, etc.).
 
-### Filter 2: US Politics Classifier (`scripts/filter_by_platform.py`, Pass 2)
+### Additional Classifications
 
-LLM classifier (Claude Sonnet via OpenRouter) asks: "Does this video discuss US politics specifically?" Responds YES or NO. YES includes election odds, candidate predictions, policy predictions, CFTC regulation discussion. NO includes sports betting, foreign events, crypto content, platform tutorials.
+**Information vs Trading** (`tiktok/scripts/classify_info_vs_trading.py`, `youtube/scripts/classify_info_vs_trading.py`): Claude Sonnet classifies each video's primary purpose — is the creator citing market odds as political evidence (INFORMATION) or giving trading advice (TRADING)?
 
-- **Input:** 906 platform-matched videos
-- **Output:** 413 YES (US politics), 491 NO
-
-### Filter 3: Relevance Filter (`scripts/filter_relevance.py`)
-
-LLM classifier (Claude Sonnet via OpenRouter) checks whether the platform mention is genuine or incidental. Filters out hashtag spam, ads tagging a competitor keyword, and passing mentions with no substantive discussion.
-
-- **Input:** 413 US politics videos
-- **Output:** 364 RELEVANT, 49 NOT_RELEVANT
-
-## Additional Classifications
-
-### Information vs Trading (`scripts/classify_info_vs_trading.py`)
-
-Classifies each video's primary purpose:
-- **INFORMATION:** Video is about politics; prediction market odds are cited as evidence
-- **TRADING:** Video is about making money; the political event is incidental
-
-### Framing and Staleness (`scripts/classify_framing_and_staleness.py`)
-
-Two classifications in one pass:
-1. **Framing:** Does the creator present odds as neutral data or partisan ammunition?
-2. **Staleness:** Does the video cite specific odds that would become outdated, or is it general commentary?
-
-### Descriptive Analysis (`scripts/descriptive_analysis.py`)
-
-Frequency-based descriptive statistics (platform breakdown, candidate mentions, engagement, temporal distribution) with an optional LLM pass for topic categorization.
+**Contract Extraction** (`tiktok/scripts/extract_contracts.py`, `youtube/scripts/extract_contracts.py`): Extracts race types (presidential, senate, house, governor, policy), specific races, candidates mentioned, contracts cited, and odds mentioned from each transcript.
 
 ## Transcripts
 
 Transcripts are sourced in priority order:
-1. **Whisper transcriptions** (`data/whisper_transcripts/`) - OpenAI Whisper, highest quality
-2. **TikTok auto-captions** (`data/tiktok_transcripts/`) - platform-generated
-3. **CSV fallback** - previously coded transcript column
+1. **Whisper transcriptions** (`tiktok/data/whisper_transcripts/`) — OpenAI Whisper, highest quality
+2. **TikTok auto-captions** (`tiktok/data/tiktok_transcripts/`) — platform-generated
+3. **CSV fallback** — transcript column in the filtered CSV
 
-## Data Files
+YouTube transcripts are embedded in `youtube/data/youtube_platform_filtered.csv` (the `_transcript_text` column).
 
-| File | Description |
-|---|---|
-| `data/raw/tiktok_raw.json` | Raw scraped data from BrightData |
-| `data/tiktok_platform_filtered.csv` | 906 videos after keyword + US politics filter |
-| `data/filter_llm_progress.json` | Pass 2 (US politics) classification progress |
-| `data/relevance_progress.json` | Filter 3 (relevance) classification progress |
-| `data/info_vs_trading_progress.json` | Information vs Trading classification progress |
-| `data/framing_staleness_progress.json` | Framing & staleness classification progress |
+## Repository Structure
 
-## Notes
+```
+final_data/                     # Clean CSVs for download
+  tiktok_prediction_markets.csv   593 videos
+  tiktok_polls.csv                317 videos
+  youtube_prediction_markets.csv  4,078 videos
+  youtube_polls.csv               2,923 videos
+  transcripts_tiktok.zip          Whisper + auto-caption transcripts
+  transcripts_youtube.zip
 
-- The dataset has some degree of **recency bias** because TikTok's search algorithm favors recent content during scraping
-- There was a large spike in video volume around **Oct-Nov 2024** (US presidential election)
-- Legacy media accounts (CBS Mornings, Daily Mail, 60 Minutes) dominate the top-viewed videos
-- Trump is mentioned in ~60% of videos, Harris in ~13-19%, Biden in ~8%, Vance in ~7%
+replication/                    # Self-contained replication packages
+  rise_of_prediction_markets_in_political_social_media_content/
+  how_creators_use_prediction_market_content/
+  social_media_creators_citing_prediction_markets/
+  top_20_candidates_mentioned/
+
+trends/                         # Phrase trend analysis
+  phrase_analysis.py              Script to generate all 3 charts
+  markets_vs_polls_curated.png    Markets vs polls phrase usage
+  phrase_trends_by_platform.png   Key phrase trends over time
+  tiktok_vs_youtube_curated.png   Cross-platform vocabulary comparison
+
+tiktok/
+  data/                         # Filtered CSV, classification JSONs, transcripts
+  scripts/                      # Pipeline: filter, classify, extract, transcribe
+
+youtube/
+  data/                         # Filtered CSV, classification JSONs
+  scripts/                      # Pipeline: filter, classify, extract, collect
+
+polls/
+  data/                         # Filtered polls CSVs
+  scripts/                      # Pipeline: filter (TikTok + YouTube)
+```
+
+## Replication
+
+Each folder in `replication/` contains a Python script and its output PNG. All scripts read from the data files in `tiktok/data/`, `youtube/data/`, and `polls/data/`. To regenerate any chart:
+
+```bash
+python replication/<folder_name>/<folder_name>.py
+```
+
+The phrase trend analysis in `trends/` requires the same data plus transcripts:
+
+```bash
+python trends/phrase_analysis.py
+```
+
+Dependencies: `matplotlib`, `numpy`, `pandas`.
