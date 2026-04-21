@@ -29,12 +29,12 @@ ROOT = SCRIPT_DIR.parent.parent
 OUTPUT_DIR = SCRIPT_DIR
 
 # PM datasets (filtered to political content)
-TIKTOK_PM_CSV = ROOT / "tiktok" / "data" / "tiktok_platform_filtered.csv"
-YOUTUBE_PM_CSV = ROOT / "youtube" / "data" / "youtube_platform_filtered.csv"
+TIKTOK_PM_CSV = ROOT / "final_data" / "tiktok_prediction_markets.csv"
+YOUTUBE_PM_CSV = ROOT / "final_data" / "youtube_prediction_markets.csv"
 
 # Poll datasets (filtered to political content)
-TIKTOK_POLLS_CSV = ROOT / "polls" / "data" / "tiktok_polls_filtered.csv"
-YOUTUBE_POLLS_CSV = ROOT / "polls" / "data" / "youtube_polls_filtered.csv"
+TIKTOK_POLLS_CSV = ROOT / "final_data" / "tiktok_polls.csv"
+YOUTUBE_POLLS_CSV = ROOT / "final_data" / "youtube_polls.csv"
 
 
 def load_filtered_csv(csv_path, platform, date_col, source_label):

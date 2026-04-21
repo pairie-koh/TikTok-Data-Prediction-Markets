@@ -16,7 +16,7 @@ import numpy as np
 
 csv.field_size_limit(10_000_000)
 ROOT = Path(__file__).resolve().parent.parent
-OUT  = ROOT / "output"
+OUT  = Path(__file__).resolve().parent
 OUT.mkdir(exist_ok=True)
 
 # ── colour palette ──────────────────────────────────────────────────
@@ -33,7 +33,7 @@ GREY   = "#6B7280"
 
 def load_tiktok_pm():
     """TikTok prediction-market videos (topic=YES, has transcript)."""
-    path = ROOT / "tiktok/data/tiktok_platform_filtered.csv"
+    path = ROOT / "final_data" / "tiktok_prediction_markets.csv"
     rows = []
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):
@@ -52,7 +52,7 @@ def load_tiktok_polls():
     """TikTok polls-focused videos (topic=YES, has transcript)."""
     # exclude ids already in PM set
     pm_ids = {r["id"] for r in load_tiktok_pm()}
-    path = ROOT / "polls/data/tiktok_polls_filtered.csv"
+    path = ROOT / "final_data" / "tiktok_polls.csv"
     rows = []
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):
@@ -70,7 +70,7 @@ def load_tiktok_polls():
 
 def load_youtube_pm():
     """YouTube prediction-market videos (topic=YES, has transcript)."""
-    path = ROOT / "youtube/data/youtube_platform_filtered.csv"
+    path = ROOT / "final_data" / "youtube_prediction_markets.csv"
     rows = []
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):
@@ -88,7 +88,7 @@ def load_youtube_pm():
 def load_youtube_polls():
     """YouTube polls-focused videos (topic=YES, has transcript)."""
     pm_ids = {r["id"] for r in load_youtube_pm()}
-    path = ROOT / "polls/data/youtube_polls_filtered.csv"
+    path = ROOT / "final_data" / "youtube_polls.csv"
     rows = []
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):

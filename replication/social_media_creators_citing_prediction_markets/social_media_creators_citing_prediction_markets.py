@@ -32,13 +32,12 @@ OUTPUT_DIR = SCRIPT_DIR
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # TikTok data
-TT_DATA_DIR = BASE_DIR / "tiktok" / "data"
-TT_CSV = TT_DATA_DIR / "tiktok_platform_filtered.csv"
-TT_CONTRACT = TT_DATA_DIR / "contract_extraction_progress.json"
+TT_CSV = BASE_DIR / "final_data" / "tiktok_prediction_markets.csv"
+TT_CONTRACT = BASE_DIR / "tiktok" / "data" / "contract_extraction_progress.json"
 
 # YouTube data
+YT_CSV = BASE_DIR / "final_data" / "youtube_prediction_markets.csv"
 YT_DATA_DIR = BASE_DIR / "youtube" / "data"
-YT_CSV = YT_DATA_DIR / "youtube_platform_filtered.csv"
 YT_CONTRACT_FILES = [
     YT_DATA_DIR / "contract_extraction_progress.json",
     YT_DATA_DIR / "contract_extraction_progress_2.json",
