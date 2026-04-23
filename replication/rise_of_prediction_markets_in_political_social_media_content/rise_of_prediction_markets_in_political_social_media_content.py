@@ -38,7 +38,13 @@ YOUTUBE_POLLS_CSV = ROOT / "final_data" / "youtube_polls.csv"
 
 
 def load_filtered_csv(csv_path, platform, date_col, source_label):
-    """Load filtered CSV, keeping only _topic=YES rows."""
+    """Load filtered CSV, keeping only _topic=YES rows.
+
+    For prediction_markets videos, exclude description/hashtag-only matches
+    to remove retroactive affiliate links (e.g. Kalshi links added to pre-2021
+    video descriptions). Only keep videos where the creator actually said or
+    titled the prediction market reference.
+    """
     if not csv_path.exists():
         print(f"  {platform} {source_label}: NO DATA FOUND at {csv_path}")
         return pd.DataFrame(columns=["date", "source"])
@@ -48,7 +54,15 @@ def load_filtered_csv(csv_path, platform, date_col, source_label):
     if "_topic" in df.columns:
         df = df[df["_topic"] == "YES"]
     df = df.dropna(subset=["date"])
-    print(f"  {platform} {source_label}: {len(df)} political videos")
+
+    if source_label == "prediction_markets" and "_match_source" in df.columns:
+        before = len(df)
+        df = df[df["_match_source"].str.contains("transcript|title", case=False, na=False)]
+        removed = before - len(df)
+        print(f"  {platform} {source_label}: {len(df)} political videos ({removed} description-only removed)")
+    else:
+        print(f"  {platform} {source_label}: {len(df)} political videos")
+
     return df[["date"]].assign(source=source_label)
 
 
