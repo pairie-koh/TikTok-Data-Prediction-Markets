@@ -12,6 +12,7 @@ Usage:
 """
 
 import csv
+import re
 import sys
 from pathlib import Path
 
@@ -37,13 +38,32 @@ TIKTOK_POLLS_CSV = ROOT / "final_data" / "tiktok_polls.csv"
 YOUTUBE_POLLS_CSV = ROOT / "final_data" / "youtube_polls.csv"
 
 
+_AFFILIATE_RE = re.compile(
+    r"kalshi\.pxf\.io|polymarket\.com/ref|predictit.*ref|bit\.ly|affiliate|referral",
+    re.IGNORECASE,
+)
+_PM_TEXT_RE = re.compile(
+    r"\b(kalshi|polymarket|predictit|prediction market|betting odds|election odds)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_affiliate_only(description: str) -> bool:
+    """True if PM terms in the description only appear inside URLs or affiliate links."""
+    if _AFFILIATE_RE.search(description):
+        return True
+    # Strip URLs and check if any PM term remains in plain text
+    text_no_urls = re.sub(r"https?://\S+", "", description)
+    return not _PM_TEXT_RE.search(text_no_urls)
+
+
 def load_filtered_csv(csv_path, platform, date_col, source_label):
     """Load filtered CSV, keeping only _topic=YES rows.
 
-    For prediction_markets videos, exclude description/hashtag-only matches
-    to remove retroactive affiliate links (e.g. Kalshi links added to pre-2021
-    video descriptions). Only keep videos where the creator actually said or
-    titled the prediction market reference.
+    For prediction_markets videos with description-only matches, exclude rows
+    where the PM reference is just an affiliate link or bare URL (e.g. Kalshi
+    affiliate links retroactively added to old video descriptions). Videos with
+    genuine text mentions in the description are kept.
     """
     if not csv_path.exists():
         print(f"  {platform} {source_label}: NO DATA FOUND at {csv_path}")
@@ -57,9 +77,14 @@ def load_filtered_csv(csv_path, platform, date_col, source_label):
 
     if source_label == "prediction_markets" and "_match_source" in df.columns:
         before = len(df)
-        df = df[df["_match_source"].str.contains("transcript|title", case=False, na=False)]
+        # Only filter description-only matches; keep transcript/title matches as-is
+        desc_only = ~df["_match_source"].str.contains("transcript|title", case=False, na=False)
+        affiliate_mask = desc_only & df["description"].apply(
+            lambda d: _is_affiliate_only(str(d)) if pd.notna(d) else True
+        )
+        df = df[~affiliate_mask]
         removed = before - len(df)
-        print(f"  {platform} {source_label}: {len(df)} political videos ({removed} description-only removed)")
+        print(f"  {platform} {source_label}: {len(df)} political videos ({removed} affiliate/URL-only removed)")
     else:
         print(f"  {platform} {source_label}: {len(df)} political videos")
 
