@@ -39,22 +39,14 @@ YOUTUBE_POLLS_CSV = ROOT / "final_data" / "youtube_polls.csv"
 
 
 _AFFILIATE_RE = re.compile(
-    r"kalshi\.pxf\.io|polymarket\.com/ref|predictit.*ref|bit\.ly|affiliate|referral",
-    re.IGNORECASE,
-)
-_PM_TEXT_RE = re.compile(
-    r"\b(kalshi|polymarket|predictit|prediction market|betting odds|election odds)\b",
+    r"kalshi\.pxf\.io|polymarket\.com/ref|predictit.*ref|\.ly/|affiliate|referral",
     re.IGNORECASE,
 )
 
 
 def _is_affiliate_only(description: str) -> bool:
-    """True if PM terms in the description only appear inside URLs or affiliate links."""
-    if _AFFILIATE_RE.search(description):
-        return True
-    # Strip URLs and check if any PM term remains in plain text
-    text_no_urls = re.sub(r"https?://\S+", "", description)
-    return not _PM_TEXT_RE.search(text_no_urls)
+    """True if the PM reference in the description is just an affiliate link."""
+    return bool(_AFFILIATE_RE.search(description))
 
 
 def load_filtered_csv(csv_path, platform, date_col, source_label):
